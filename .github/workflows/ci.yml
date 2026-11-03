@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TERRAFORM_VERSION: "1.17.1"
+  TFLINT_VERSION: "v0.64.0"
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  terraform:
+    name: Terraform (fmt, validate, test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+      - run: make init
+      - run: make fmt
+      - run: make validate
+      # Mock providers: no AWS credentials exist in this workflow.
+      - run: make tftest
+
+  tflint:
+    name: TFLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+      - run: make tflint
+        env:
+          # Avoids GitHub API rate limits when downloading the AWS ruleset.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  checkov:
+    name: Checkov
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      # Hard gate. Deliberate exceptions are listed with reasons in .checkov.yaml.
+      - run: make checkov
+
+  python:
+    name: Python (ruff, pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      # PySpark 4 needs Java 17+.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: make lint-python
+      - run: make unit
