@@ -1,0 +1,31 @@
+# Checkov configuration. CI runs Checkov as a *hard* gate: any new failure
+# breaks the build. The checks below are skipped on purpose, each for a stated
+# reason. Revisit them before using this stack for production data.
+framework:
+  - terraform
+directory:
+  - .
+skip-path:
+  - .venv
+  - .terraform
+compact: true
+quiet: true
+skip-check:
+  # S3 server access logging needs a separate log bucket (which then fails the
+  # same check itself). CloudTrail S3 data events are the recommended audit
+  # trail for a lake; see docs/deploy.md.
+  - CKV_AWS_18
+  # Cross-region replication doubles storage cost and is a business-continuity
+  # decision, not a default for a single-region dev stack.
+  - CKV_AWS_144
+  # Event notifications only make sense with a consumer; this pipeline is
+  # scheduled through Step Functions, not triggered by S3 events.
+  - CKV2_AWS_62
+  # The state machine logs at ERROR level without execution data on purpose:
+  # execution data can contain payloads, and the full history is already kept
+  # (IAM-protected, CMK-encrypted) in the Step Functions execution history.
+  - CKV_AWS_285
+  # False positive: every bucket's lifecycle configuration starts with a
+  # bucket-wide abort-incomplete-multipart-uploads rule; Checkov flags the
+  # additional prefix-scoped expiration rules in the ops bucket individually.
+  - CKV_AWS_300

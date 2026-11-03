@@ -1,0 +1,46 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+# Real variable files can hold account-specific values; only *.example is committed.
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+# Lock files are not committed: modules are libraries and the example is a
+# demo, so CI resolves the newest provider within the "~> 6.0" constraint.
+.terraform.lock.hcl
+
+# Databricks (kept for consistency across the author's repos)
+.databricks/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store

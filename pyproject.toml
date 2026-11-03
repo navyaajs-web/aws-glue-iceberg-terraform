@@ -1,0 +1,45 @@
+[project]
+name = "aws-glue-iceberg-terraform"
+version = "0.1.0"
+description = "Terraform for an AWS Glue + Apache Iceberg data lake, with a unit-tested incremental Glue job."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Navya Sindhu" }]
+requires-python = ">=3.11"
+# The Glue job runs on the Glue runtime, which provides pyspark/awsglue/boto3,
+# so there are no runtime dependencies to install here.
+dependencies = []
+
+[dependency-groups]
+# Install with: python -m pip install --group dev --group iac  (pip >= 25.1)
+# pyspark 4.0 is used locally because it supports Python 3.13; Glue 5.0 runs
+# Spark 3.5. The job only uses DataFrame/SQL APIs common to both.
+dev = [
+  "pyspark==4.0.5",
+  "pytest==8.4.2",
+  "ruff==0.14.3",
+]
+# Infrastructure scanning; kept separate because it pulls in many packages.
+iac = [
+  "checkov==3.4.3",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+pythonpath = ["glue"]
+addopts = "-ra --strict-markers"
+filterwarnings = ["ignore::DeprecationWarning:pyspark.*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["glue", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "N"]
+# `functions as F` / `types as T` is the universal PySpark convention.
+ignore = ["N812"]
+
+[tool.ruff.lint.per-file-ignores]
+# Fixture-heavy test modules: long literal SQL/rows read better unwrapped.
+"tests/**" = ["E501"]
