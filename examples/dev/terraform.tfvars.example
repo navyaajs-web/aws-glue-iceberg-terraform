@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars (git-ignored) and adjust.
+aws_region    = "eu-west-1"
+project       = "orderlake"
+environment   = "dev"
+bucket_suffix = "a1b2c3" # replace with your own random string: openssl rand -hex 3
+
+# alert_email_addresses = ["you@example.com"]
